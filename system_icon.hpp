@@ -18,6 +18,10 @@ struct PathTag
 {
 };
 
+struct ProcessTag
+{
+};
+
 template <class Tag>
 class SystemIconAsyncWorker : public Nan::AsyncWorker
 {
@@ -25,6 +29,11 @@ public:
   SystemIconAsyncWorker(const char* name, IconSize size,
                         Nan::Callback* callback)
     : Nan::AsyncWorker{callback}, name{name}, size{size}
+  {
+  }
+
+  SystemIconAsyncWorker(int pid, IconSize size, Nan::Callback* callback)
+    : Nan::AsyncWorker{callback}, pid{pid}, size{size}
   {
   }
 
@@ -53,6 +62,7 @@ protected:
 
 private:
   std::string name;
+  int pid = 0;
   IconSize size;
   std::vector<unsigned char> result;
 };

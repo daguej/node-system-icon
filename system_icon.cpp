@@ -11,3 +11,9 @@ void SystemIconAsyncWorker<PathTag>::Execute()
 {
   // Do nothing.
 }
+
+template <>
+void SystemIconAsyncWorker<ProcessTag>::Execute()
+{
+  // Do nothing.
+}

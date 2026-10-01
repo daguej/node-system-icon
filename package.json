@@ -11,12 +11,13 @@
   },
   "dependencies": {
     "bindings": "~1.5.0",
-    "nan": "~2.23.1"
+    "nan": "^2.29.0"
   },
   "homepage": "https://github.com/brettz9/node-system-icon",
   "keywords": [
     "file",
     "icon",
+    "linux",
     "mac",
     "macos",
     "windows"
@@ -36,6 +37,7 @@
   },
   "os": [
     "darwin",
+    "linux",
     "win32"
   ],
   "devDependencies": {

@@ -235,7 +235,7 @@ std::wstring Utf8ToWide(const std::string& src)
   return std::wstring{dest.begin(), dest.end()};
 }
 
-std::vector<unsigned char> GetIcon(const std::string& name, IconSize size, UINT flag)
+std::vector<unsigned char> GetIcon(const std::wstring& name, IconSize size, UINT flag)
 {
   ComInit init;
 
@@ -257,7 +257,7 @@ std::vector<unsigned char> GetIcon(const std::string& name, IconSize size, UINT 
   }
 
   SHFILEINFOW sfi = {0};
-  auto hr = SHGetFileInfoW(Utf8ToWide(name).c_str(), 0,
+  auto hr = SHGetFileInfoW(name.c_str(), 0,
                            std::addressof(sfi), sizeof(sfi), flag);
   HICON hIcon;
 
@@ -299,11 +299,44 @@ std::vector<unsigned char> GetIcon(const std::string& name, IconSize size, UINT 
 template <>
 void SystemIconAsyncWorker<ExtensionTag>::Execute()
 {
-  this->result = GetIcon(this->name, this->size, SHGFI_USEFILEATTRIBUTES);
+  this->result =
+    GetIcon(Utf8ToWide(this->name), this->size, SHGFI_USEFILEATTRIBUTES);
 }
 
 template <>
 void SystemIconAsyncWorker<PathTag>::Execute()
 {
-  this->result = GetIcon(this->name, this->size, 0);
+  this->result = GetIcon(Utf8ToWide(this->name), this->size, 0);
+}
+
+template <>
+void SystemIconAsyncWorker<ProcessTag>::Execute()
+{
+  auto hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE,
+                              static_cast<DWORD>(this->pid));
+  if (hProcess == nullptr)
+  {
+    return;
+  }
+
+  std::vector<wchar_t> path(32768);
+  auto length = static_cast<DWORD>(path.size());
+  auto ok = QueryFullProcessImageNameW(hProcess, 0, path.data(),
+                                       std::addressof(length));
+  CloseHandle(hProcess);
+
+  if (!ok)
+  {
+    return;
+  }
+
+  // An executable with no icon of its own would only get the generic one for
+  // applications. Asking for icon -1 counts its icons.
+  std::wstring exe{path.data(), length};
+  if (ExtractIconExW(exe.c_str(), -1, nullptr, nullptr, 0) == 0)
+  {
+    return;
+  }
+
+  this->result = GetIcon(exe, this->size, 0);
 }

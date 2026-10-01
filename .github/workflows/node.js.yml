@@ -12,10 +12,11 @@ on:
 jobs:
   build:
 
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
+        os: [macos-latest, ubuntu-latest]
         node-version: [10.x,12.x,14.x]
 
     steps:
@@ -24,6 +25,9 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - name: Install Linux build dependencies
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y libglib2.0-dev libgdk-pixbuf-2.0-dev adwaita-icon-theme
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test

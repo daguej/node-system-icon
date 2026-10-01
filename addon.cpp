@@ -43,10 +43,32 @@ NAN_METHOD(getIconForPath)
     new SystemIconAsyncWorker<PathTag>(*path, size, callback));
 }
 
+NAN_METHOD(getIconForProcess)
+{
+  if (info.Length() < 3)
+  {
+    Nan::ThrowTypeError("Wrong number of arguments");
+    return;
+  }
+
+  if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsFunction())
+  {
+    Nan::ThrowTypeError("Wrong arguments");
+    return;
+  }
+
+  auto pid = Nan::To<int32_t>(info[0]).FromJust();
+  auto size = static_cast<IconSize>(Nan::To<int32_t>(info[1]).FromJust());
+  auto callback = new Nan::Callback(info[2].As<v8::Function>());
+  Nan::AsyncQueueWorker(
+    new SystemIconAsyncWorker<ProcessTag>(pid, size, callback));
+}
+
 NAN_MODULE_INIT(init)
 {
   NAN_EXPORT(target, getIconForExtension);
   NAN_EXPORT(target, getIconForPath);
+  NAN_EXPORT(target, getIconForProcess);
 
   Nan::Set(target, Nan::New("ICON_SIZE_EXTRA_SMALL").ToLocalChecked(),
            Nan::New(static_cast<int>(IconSize::ExtraSmall)));

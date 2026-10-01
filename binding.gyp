@@ -55,7 +55,20 @@
             'system_icon_win.cpp',
           ],
         }],
-        ['OS!="mac" and OS!="win"', {
+        ['OS=="linux"', {
+          'cflags_cc': [
+            '<!@(pkg-config --cflags gio-2.0 gio-unix-2.0 gdk-pixbuf-2.0)',
+          ],
+          'link_settings': {
+            'libraries': [
+              '<!@(pkg-config --libs gio-2.0 gio-unix-2.0 gdk-pixbuf-2.0)',
+            ],
+          },
+          'sources': [
+            'system_icon_linux.cpp',
+          ],
+        }],
+        ['OS!="mac" and OS!="win" and OS!="linux"', {
           'sources': [
             'system_icon.cpp',
           ],

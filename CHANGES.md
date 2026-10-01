@@ -1,5 +1,11 @@
 # CHANGES to system-icon2
 
+## Unreleased
+
+- feat: Linux support
+- feat: add getIconForProcess(pid)
+- fix: report addon load errors from each call instead of throwing on require
+
 ## 0.5.1
 
 - fix: avoid deprecated APIs and suppress nan warnings
