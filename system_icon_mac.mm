@@ -60,40 +60,41 @@ void SystemIconAsyncWorker<PathTag>::Execute()
 template <>
 void SystemIconAsyncWorker<ProcessTag>::Execute()
 {
-  // Applications registered with Launch Services know their own icon. One
-  // without a bundle would only have the generic icon for executables.
+  // Applications registered with Launch Services know their own bundle, even
+  // when their executable is an interpreter living elsewhere. For any other
+  // process, start from its executable.
   auto app = [NSRunningApplication
     runningApplicationWithProcessIdentifier:static_cast<pid_t>(this->pid)];
-  NSImage* image = app != nil && app.bundleURL != nil ? app.icon : nil;
-
-  if (image == nil)
+  NSString* path = app.bundleURL.path;
+  if (path == nil)
   {
-    char path[PROC_PIDPATHINFO_MAXSIZE];
-    if (proc_pidpath(static_cast<pid_t>(this->pid), path, sizeof(path)) <= 0)
+    char buf[PROC_PIDPATHINFO_MAXSIZE];
+    if (proc_pidpath(static_cast<pid_t>(this->pid), buf, sizeof(buf)) <= 0)
     {
       return;
     }
-
-    // The innermost .app bundle containing the executable. A process outside
-    // of one has no icon.
-    NSString* bundle = nil;
-    for (auto dir = [NSString stringWithUTF8String:path]; dir.length > 1;
-         dir = [dir stringByDeletingLastPathComponent])
-    {
-      if ([[dir pathExtension] isEqualToString:@"app"])
-      {
-        bundle = dir;
-        break;
-      }
-    }
-    if (bundle == nil)
-    {
-      return;
-    }
-
-    image = [[NSWorkspace sharedWorkspace] iconForFile:bundle];
+    path = [NSString stringWithUTF8String:buf];
   }
 
+  // The outermost .app bundle containing it, so that helpers nested inside an
+  // application, such as Chrome's or an Electron app's, get its icon. A
+  // process outside of one, including an unbundled executable that checked in
+  // with Launch Services, would only have the generic icon, so it has none.
+  NSString* bundle = nil;
+  for (auto dir = path; dir.length > 1;
+       dir = [dir stringByDeletingLastPathComponent])
+  {
+    if ([[dir pathExtension] isEqualToString:@"app"])
+    {
+      bundle = dir;
+    }
+  }
+  if (bundle == nil)
+  {
+    return;
+  }
+
+  auto image = [[NSWorkspace sharedWorkspace] iconForFile:bundle];
   [image setSize:GetSize(this->size)];
 
   if (image.valid)

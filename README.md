@@ -156,8 +156,9 @@ part of an installed application, fails with "Failed to load icon" rather than
 getting a generic icon.
 
 * **Windows:** the icon of the process's executable, if it has any.
-* **macOS:** the icon of the running application, or else of the innermost
-  `.app` bundle containing the executable.
+* **macOS:** the icon of the outermost `.app` bundle containing the process,
+  so helpers nested inside an application, such as Chrome's or an Electron
+  app's, get that application's icon.
 * **Linux:** the icon from the application's `.desktop` file. It is found from
   the desktop file the process was launched from, the Flatpak or Snap the
   process runs in, or by matching the executable (or, for interpreters such as
